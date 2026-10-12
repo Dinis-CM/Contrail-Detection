@@ -5,18 +5,28 @@ import h5py
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+import albumentations as A
 
 
 class Dataset(Dataset):
-    def __init__(self, file_paths, is_train=True):
+    def __init__(self, file_paths, is_test=False, do_augmentation=False, seed=2006):
 
         self.file_paths = sorted(file_paths)
 
         self.index_map = []
 
-        self.is_train = is_train
+        self.is_test = is_test
+
+        self.do_augmentation = do_augmentation
 
         self.handles = {}
+
+        if self.do_augmentation:
+            self.transform = A.Compose([
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.5),
+                A.RandomRotate90(p=0.5),
+            ], seed=seed)
 
         for path in self.file_paths:
             with h5py.File(path, 'r') as f:
@@ -72,14 +82,22 @@ class Dataset(Dataset):
 
         image = self.convert_to_ash_false_color(raw_bands, scale, offset)
         
-        # For PyTorch
-        image_tensor = torch.from_numpy(image.transpose(2, 0, 1))
-
-        if self.is_train:
+        if not self.is_test:
+            
             mask = data['mask'][local_idx].astype(np.float32)
-            mask_tensor = torch.from_numpy(mask).unsqueeze(0)
+            
+            if self.do_augmentation:
+                augmented = self.transform(image=image, mask=mask)
+                image = augmented['image']
+                mask = augmented['mask']
+
+            # For PyTorch
+            image_tensor = torch.from_numpy(image.transpose(2, 0, 1).copy())
+            mask_tensor = torch.from_numpy(mask.copy()).unsqueeze(0)
+            
             return image_tensor, mask_tensor
-        else:        
+        else: 
+            image_tensor = torch.from_numpy(image.transpose(2, 0, 1).copy())       
             img_id = data['id'][local_idx].decode('utf-8')
             return image_tensor, img_id
 
