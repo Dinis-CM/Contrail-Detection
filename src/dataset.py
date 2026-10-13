@@ -26,6 +26,7 @@ class Dataset(Dataset):
                 A.HorizontalFlip(p=0.5),
                 A.VerticalFlip(p=0.5),
                 A.RandomRotate90(p=0.5),
+                A.ShiftScaleRotate(p=0.5),
             ], seed=seed)
 
         for path in self.file_paths:

@@ -52,4 +52,4 @@ class DiceBCELoss(nn.Module):
         dice = self.dice_loss(preds, target)
         bce = self.bce_loss(preds, target)
 
-        return self.weight_dice * dice + (1. - self.weight_dice) * bce
+        return self.weight_dice * dice + bce
