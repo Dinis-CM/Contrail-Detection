@@ -25,18 +25,18 @@ class DiceLoss(nn.Module):
             # Unbounded -> bounded [0, 1]
             preds = torch.sigmoid(preds)
         
-        # Flatten to (Batch, H*W) for each image in the batch
-        preds = preds.flatten(1)
-        target = target.flatten(1)
+        # Flatten to (Batch*H*W) for each image in the batch
+        preds = preds.view(-1)
+        target = target.view(-1)
 
-        intersection = (preds * target).sum(dim=1)
+        intersection = (preds * target).sum()
 
-        cardinality = preds.sum(dim=1) + target.sum(dim=1)
+        cardinality = preds.sum() + target.sum()
 
         # Avoid division by zero
         dice_score = (2. * intersection + self.tol) / (cardinality + self.tol)
 
-        return (1. - dice_score).mean()
+        return 1. - dice_score
 
 
 class DiceBCELoss(nn.Module):
@@ -51,5 +51,6 @@ class DiceBCELoss(nn.Module):
     def forward(self, preds, target):
         dice = self.dice_loss(preds, target)
         bce = self.bce_loss(preds, target)
+        weighted = self.weight_dice * dice + bce
 
-        return self.weight_dice * dice + bce
+        return weighted, dice, bce
