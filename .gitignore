@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /Data/ae4353-2026
 /.vscode
+*.zip
