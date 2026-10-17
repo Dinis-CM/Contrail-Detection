@@ -161,3 +161,6 @@ cython_debug/
 /Data/ae4353-2026
 /.vscode
 *.zip
+Output/model02_0.001/best_checkpoint.pth
+Output/model02_0.001/last_checkpoint.pth
+Output/model02_0.001_2/best_checkpoint.pth
